@@ -1,0 +1,60 @@
+[project]
+name = "course-material-parser"
+version = "0.1.0"
+description = "Local agent skill that parses course PDFs with Docling and exposes parse and read CLIs."
+readme = "README.md"
+authors = [
+    { name = "nilkong" }
+]
+requires-python = "==3.12.*"
+dependencies = [
+    "docling>=2.145.0",
+    "docling-core>=2.105.0",
+    "mlx-vlm>=0.7.12 ; platform_machine == 'arm64' and sys_platform == 'darwin'",
+    "pillow>=13.0.0",
+    "pypdfium2>=5.14.0",
+]
+
+[project.scripts]
+parse = "course_material_parser.parse_command:main"
+read = "course_material_parser.read_command:main"
+download-models = "course_material_parser.download_models_command:main"
+
+[build-system]
+requires = ["uv_build>=0.13.3,<0.14.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+# Agent Skills keep executable code under scripts/, so the package lives there, not in src/.
+module-root = "scripts"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+    "ruff>=0.17.3",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# The default suite must never run Docling conversion or download models.
+addopts = "-m 'not docling' --strict-markers"
+markers = [
+    "docling: runs real Docling conversion; needs downloaded models (opt in with `pytest -m docling`)",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+# Where first-party imports live, so import sorting tells them from third-party ones.
+src = ["scripts", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "UP", "SIM", "D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+# Test modules need docstrings like every module; test functions and fixtures document
+# behaviour through their names.
+"tests/**" = ["D102", "D103", "D105", "D107"]
